@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>우리의 계절 - 파트너 초대</title>
+  <title>Our Season - Partner Invite</title>
   <style>
-    body { font-family: 'Noto Sans KR', sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; text-align: center; background: linear-gradient(160deg, #fff0f3 0%, #ffe4d6 50%, #fce4ec 100%); min-height: 100vh; }
+    body { font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; text-align: center; background: linear-gradient(160deg, #fff0f3 0%, #ffe4d6 50%, #fce4ec 100%); min-height: 100vh; }
     h1 { color: #e91e63; font-size: 24px; }
     p { color: #5c2434; font-size: 16px; line-height: 1.6; }
     .btn { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #e8577d, #f48fb1); color: white; border-radius: 16px; text-decoration: none; font-weight: bold; margin: 10px; box-shadow: 0 4px 16px rgba(232,87,125,0.35); }
@@ -16,62 +16,103 @@
 </head>
 <body>
   <div class="heart">💕</div>
-  <h1>우리의 계절 파트너 초대</h1>
-  <p id="intro">앱을 실행하여 자동으로 파트너 연동을 진행합니다.<br>앱이 없으면 스토어에서 다운로드해주세요.</p>
+  <h1 id="title"></h1>
+  <p id="intro"></p>
 
-  <p id="status" style="color: #8b5e6b; font-size: 14px; margin-top: 30px;">앱을 여는 중...</p>
+  <p id="status" style="color: #8b5e6b; font-size: 14px; margin-top: 30px;"></p>
 
-  <a id="appLink" class="btn" href="#">앱에서 열기</a>
-  <a id="appStoreLink" class="btn btn-store hidden" href="https://apps.apple.com/kr/app/id6773003298">App Store</a>
+  <a id="appLink" class="btn" href="#"></a>
+  <a id="appStoreLink" class="btn btn-store hidden" href="https://apps.apple.com/app/id6773003298">App Store</a>
   <a id="playStoreLink" class="btn btn-store hidden" href="https://play.google.com/store/apps/details?id=com.lovelogbook.app">Play Store</a>
 
   <script>
     (function() {
+      // 다국어 문구 (수신자 기기 언어 기준)
+      var T = {
+        ko: {
+          docTitle: '우리의 계절 - 파트너 초대',
+          title: '우리의 계절 파트너 초대',
+          intro: '앱을 실행하여 자동으로 파트너 연동을 진행합니다.<br>앱이 없으면 스토어에서 다운로드해주세요.',
+          opening: '앱을 여는 중...',
+          appLink: '앱에서 열기',
+          noCode: '초대 코드가 없습니다.',
+          notInstalled: '앱이 설치되어 있지 않습니다. {store}로 이동합니다...',
+          pcIntro: '모바일 기기에서 아래 스토어 링크로 앱을 설치한 후<br>다시 초대 링크를 열어주세요.'
+        },
+        ja: {
+          docTitle: '私たちの季節 - パートナー招待',
+          title: '私たちの季節 パートナー招待',
+          intro: 'アプリを起動して自動的にパートナー連携を行います。<br>アプリがない場合はストアからダウンロードしてください。',
+          opening: 'アプリを開いています...',
+          appLink: 'アプリで開く',
+          noCode: '招待コードがありません。',
+          notInstalled: 'アプリがインストールされていません。{store}に移動します...',
+          pcIntro: 'モバイル端末で下記のストアリンクからアプリをインストール後、<br>もう一度招待リンクを開いてください。'
+        },
+        en: {
+          docTitle: 'Our Season - Partner Invite',
+          title: 'Our Season Partner Invite',
+          intro: "Opening the app to connect automatically.<br>If you don't have the app, download it from the store.",
+          opening: 'Opening the app...',
+          appLink: 'Open in app',
+          noCode: 'No invite code.',
+          notInstalled: 'The app is not installed. Redirecting to {store}...',
+          pcIntro: 'Install the app from the store links below on a mobile device,<br>then open the invite link again.'
+        }
+      };
+
+      var lang = (navigator.language || 'ko').toLowerCase();
+      var L = lang.indexOf('ja') === 0 ? T.ja : (lang.indexOf('en') === 0 ? T.en : T.ko);
+      document.documentElement.lang = (L === T.ja ? 'ja' : (L === T.en ? 'en' : 'ko'));
+      document.title = L.docTitle;
+      document.getElementById('title').textContent = L.title;
+      document.getElementById('intro').innerHTML = L.intro;
+      document.getElementById('status').textContent = L.opening;
+      document.getElementById('appLink').textContent = L.appLink;
+
       var params = new URLSearchParams(window.location.search);
       var code = params.get('code');
-      if (!code) { document.getElementById('status').textContent = '초대 코드가 없습니다.'; return; }
+      var statusEl = document.getElementById('status');
+      var introEl = document.getElementById('intro');
+      if (!code) { statusEl.textContent = L.noCode; return; }
 
       var ua = navigator.userAgent;
       var isIOS = /iPad|iPhone|iPod/.test(ua);
       var isAndroid = /android/i.test(ua);
-      var isMobile = isIOS || isAndroid;
 
       var appUrl = 'com.lovelogbook.app://invite?code=' + encodeURIComponent(code);
-      var appStoreUrl = 'https://apps.apple.com/kr/app/id6773003298';
+      // 지역중립 스토어 링크 (사용자 계정 지역으로 자동 이동)
+      var appStoreUrl = 'https://apps.apple.com/app/id6773003298';
       var playStoreUrl = 'https://play.google.com/store/apps/details?id=com.lovelogbook.app';
 
       var appLinkEl = document.getElementById('appLink');
       var appStoreEl = document.getElementById('appStoreLink');
       var playStoreEl = document.getElementById('playStoreLink');
-      var statusEl = document.getElementById('status');
-      var introEl = document.getElementById('intro');
 
       appLinkEl.href = appUrl;
 
       if (isIOS) {
-        // iOS: App Store 버튼만 표시
         appStoreEl.classList.remove('hidden');
       } else if (isAndroid) {
-        // Android: Play Store 버튼만 표시
         playStoreEl.classList.remove('hidden');
       } else {
-        // PC / Mac: 두 스토어 모두 표시, 자동 이동 안 함
+        // PC / Mac: 자동 이동 없이 두 스토어 모두 표시
         appLinkEl.classList.add('hidden');
         appStoreEl.classList.remove('hidden');
         playStoreEl.classList.remove('hidden');
-        introEl.innerHTML = '모바일 기기에서 아래 스토어 링크로 앱을 설치한 후<br>다시 초대 링크를 열어주세요.';
+        introEl.innerHTML = L.pcIntro;
         statusEl.textContent = '';
         return;
       }
 
-      // 모바일: 앱 열기 시도
+      // 모바일: 앱 열기 시도 → 미설치 시 스토어로
       var storeUrl = isIOS ? appStoreUrl : playStoreUrl;
       var storeLabel = isIOS ? 'App Store' : 'Play Store';
 
       setTimeout(function() { window.location.href = appUrl; }, 200);
       setTimeout(function() {
         if (!document.hidden) {
-          statusEl.textContent = '앱이 설치되어 있지 않습니다. ' + storeLabel + '로 이동합니다...';
+          statusEl.textContent = L.notInstalled.replace('{store}', storeLabel);
           setTimeout(function() { window.location.href = storeUrl; }, 1500);
         }
       }, 2500);
